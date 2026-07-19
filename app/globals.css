@@ -1,0 +1,175 @@
+@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Pure black/white base; four accent colors do the color work, with thick
+   near-square colored frames + a soft spread shadow (designer / bold look). */
+@layer base {
+  :root {
+    --surface: #ffffff;
+  }
+  .dark {
+    /* Slightly lighter than the pure-black page so cards stand out. */
+    --surface: #161616;
+  }
+  html {
+    font-family: "Rubik", system-ui, -apple-system, "Segoe UI", sans-serif;
+    /* Reserve the scrollbar space so layout doesn't shift between pages. */
+    scrollbar-gutter: stable;
+  }
+  body {
+    @apply bg-white text-black dark:bg-black dark:text-white;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* Card: subtle hairline frame + a thick colored accent STRIPE on the inline-start
+     edge (partial frame). Usages set the stripe color via `border-s-[color]`. */
+  .card {
+    @apply rounded bg-[color:var(--surface)];
+    border-style: solid;
+    border-block-width: 1.5px;
+    border-inline-end-width: 1.5px;
+    border-inline-start-width: 7px;
+    border-block-color: rgba(0, 0, 0, 0.13);
+    border-inline-end-color: rgba(0, 0, 0, 0.13);
+    /* Defaults to the current page's accent; per-card classes override. */
+    border-inline-start-color: var(--page-accent, #0055da);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+  }
+  .dark .card {
+    border-block-color: rgba(255, 255, 255, 0.15);
+    border-inline-end-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.6);
+  }
+  .card-hover {
+    transition: transform 0.14s ease, box-shadow 0.14s ease;
+  }
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.2);
+  }
+  .dark .card-hover:hover {
+    box-shadow: 0 16px 34px rgba(0, 0, 0, 0.72);
+  }
+  .card-dashed {
+    @apply rounded border-[3px] border-dashed border-black/40 bg-[color:var(--surface)] dark:border-white/40;
+  }
+  .surface-2 {
+    @apply bg-black/[0.04] dark:bg-white/[0.07];
+  }
+
+  /* Text */
+  .heading {
+    @apply font-extrabold text-black dark:text-white;
+  }
+  .muted {
+    @apply text-neutral-500 dark:text-neutral-400;
+  }
+  .divider {
+    @apply border-black/15 dark:border-white/20;
+  }
+
+  /* Controls — thin hairline frame + a soft shadow instead of a hard black border. */
+  .input {
+    @apply w-full rounded border border-black/15 bg-white px-3 py-2 text-sm font-medium text-black outline-none
+      placeholder:font-normal placeholder:text-neutral-400
+      dark:border-white/20 dark:bg-black dark:text-white;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  }
+  .input:focus {
+    border-color: var(--page-accent, #0055da);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--page-accent, #0055da) 30%, transparent);
+  }
+  /* Primary button adopts the current page's accent + readable fg.
+     Thin frame tinted from the accent, plus a soft lift shadow. */
+  .btn-primary {
+    @apply rounded border px-4 py-2 text-sm font-bold
+      transition hover:brightness-105 disabled:opacity-50;
+    background-color: var(--page-accent, #0055da);
+    color: var(--page-accent-fg, #ffffff);
+    border-color: color-mix(in srgb, var(--page-accent, #0055da) 65%, black);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.14), 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+  }
+  .btn-outline {
+    @apply rounded border border-black/15 px-4 py-2 text-sm font-bold transition
+      hover:bg-black/[0.04] dark:border-white/20 dark:hover:bg-white/10;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+  .dark .btn-outline {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  }
+  .btn-ghost {
+    @apply rounded px-3 py-1.5 text-sm font-semibold text-neutral-600 transition hover:bg-black/[0.05]
+      dark:text-neutral-300 dark:hover:bg-white/10;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold;
+  }
+
+  /* Side panel that slides in from the inline-start edge (RTL-aware). */
+  .slide-in-side {
+    animation: slide-in-side 0.22s ease-out;
+  }
+  @keyframes slide-in-side {
+    from {
+      opacity: 0;
+      transform: translateX(-14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Subtle straight background lines in the page's PRIMARY (accent) color.
+     Rendered by <PageLines/> as a fixed, full-viewport layer. It is a fixed
+     child of a non-positioned page container, so with a negative z-index it
+     drops to the root stacking context — painted over the page background but
+     behind all content (and behind the sidebar's opaque surface). */
+  .page-lines {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--page-accent, #0055da) 6%, transparent) 0,
+        color-mix(in srgb, var(--page-accent, #0055da) 6%, transparent) 1px,
+        transparent 1px,
+        transparent 30px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--page-accent, #0055da) 4%, transparent) 0,
+        color-mix(in srgb, var(--page-accent, #0055da) 4%, transparent) 1px,
+        transparent 1px,
+        transparent 30px
+      );
+  }
+  .dark .page-lines {
+    background-image: repeating-linear-gradient(
+        0deg,
+        color-mix(in srgb, var(--page-accent, #0055da) 10%, transparent) 0,
+        color-mix(in srgb, var(--page-accent, #0055da) 10%, transparent) 1px,
+        transparent 1px,
+        transparent 30px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in srgb, var(--page-accent, #0055da) 7%, transparent) 0,
+        color-mix(in srgb, var(--page-accent, #0055da) 7%, transparent) 1px,
+        transparent 1px,
+        transparent 30px
+      );
+  }
+}
