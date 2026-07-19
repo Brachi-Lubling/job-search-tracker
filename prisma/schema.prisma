@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum JobStatus {
+  active
+  closed
+  offered
+}
+
+enum StageStatus {
+  pending
+  completed
+  failed
+}
+
+enum PipelineStage {
+  wishlist
+  applied
+  interviewing
+  offer
+  accepted
+  rejected
+}
+
+enum JobLocation {
+  remote
+  hybrid
+  onsite
+}
+
+model Company {
+  id           String           @id @default(cuid())
+  name         String
+  website      String?
+  industry     String?
+  notes        String?          @db.Text
+  createdAt    DateTime         @default(now())
+  applications JobApplication[]
+  recruiters   Recruiter[]
+}
+
+model Recruiter {
+  id        String   @id @default(cuid())
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  companyId String
+  name      String
+  role      String?
+  email     String?
+  phone     String?
+  notes     String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+model ResumeVersion {
+  id           String           @id @default(cuid())
+  versionTag   String
+  fileUrl      String
+  language     String?
+  tags         String[]         @default([])
+  notes        String?          @db.Text
+  createdAt    DateTime         @default(now())
+  applications JobApplication[]
+}
+
+model JobApplication {
+  id         String         @id @default(cuid())
+  company    Company        @relation(fields: [companyId], references: [id])
+  companyId  String
+  title      String
+  jobUrl     String?
+  resume     ResumeVersion? @relation(fields: [resumeId], references: [id], onDelete: SetNull)
+  resumeId   String?
+  status     JobStatus      @default(active)
+  pipeline   PipelineStage  @default(wishlist)
+  tags       String[]       @default([])
+  location   JobLocation?
+  salary     String?
+  source     String?
+  contact    String?
+  notes      String?        @db.Text
+  createdAt  DateTime       @default(now())
+  stages     ProcessStage[]
+  postMortem PostMortem?
+}
+
+model ProcessStage {
+  id        String         @id @default(cuid())
+  job       JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId     String
+  stageName String
+  date      DateTime       @default(now())
+  status    StageStatus    @default(pending)
+  notes     String?        @db.Text
+  createdAt DateTime       @default(now())
+}
+
+model PostMortem {
+  id              String         @id @default(cuid())
+  job             JobApplication @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId           String         @unique
+  rejectionReason String?        @db.Text
+  improvementTips String?        @db.Text
+  selfScore       Int
+  createdAt       DateTime       @default(now())
+}
