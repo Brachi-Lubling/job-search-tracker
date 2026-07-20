@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { KanbanBoard } from "@/components/jobs/KanbanBoard";
 import { NewJobForm } from "@/components/NewJobForm";
 import {
@@ -30,6 +31,7 @@ export function JobsBrowser({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showNewJob, setShowNewJob] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [q, setQ] = useState("");
   const [companyId, setCompanyId] = useState(initialCompanyId ?? "");
@@ -76,6 +78,17 @@ export function JobsBrowser({
       setJobs((prev) => prev.map((j) => (j.id === jobId ? { ...j, ...updated } : j)));
     } catch {
       load(); // revert to server truth on failure
+    }
+  }
+
+  async function remove(jobId: string) {
+    const prev = jobs;
+    setJobs((p) => p.filter((j) => j.id !== jobId));
+    try {
+      await api.jobs.remove(jobId);
+    } catch (err) {
+      setJobs(prev);
+      alert(err instanceof Error ? err.message : "המחיקה נכשלה");
     }
   }
 
@@ -167,15 +180,42 @@ export function JobsBrowser({
           לא נמצאו משרות{hasFilters ? " התואמות לסינון" : ""}.
         </div>
       ) : view === "kanban" ? (
-        <KanbanBoard jobs={jobs} onMove={move} />
+        <KanbanBoard jobs={jobs} onMove={move} onDelete={setConfirmDeleteId} />
       ) : (
-        <JobTable jobs={jobs} />
+        <JobTable jobs={jobs} onDelete={setConfirmDeleteId} />
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="מחיקת משרה"
+        message="פעולה זו תמחק גם את השלבים והסיכום. לא ניתן לשחזר."
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) remove(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }
 
-function JobTable({ jobs }: { jobs: JobListItemDTO[] }) {
+function TrashIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <path d="M4 7h16M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7h14z" />
+    </svg>
+  );
+}
+
+function JobTable({ jobs, onDelete }: { jobs: JobListItemDTO[]; onDelete: (id: string) => void }) {
   return (
     <div className="overflow-x-auto card">
       <table className="w-full text-right text-sm">
@@ -186,6 +226,7 @@ function JobTable({ jobs }: { jobs: JobListItemDTO[] }) {
             <th className="px-4 py-3 font-medium">שלב</th>
             <th className="px-4 py-3 font-medium">סטטוס</th>
             <th className="px-4 py-3 font-medium">נוצר</th>
+            <th className="px-4 py-3 font-medium"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
@@ -208,6 +249,15 @@ function JobTable({ jobs }: { jobs: JobListItemDTO[] }) {
                 </span>
               </td>
               <td className="px-4 py-3 muted">{formatDate(job.createdAt)}</td>
+              <td className="px-4 py-3 text-left">
+                <button
+                  onClick={() => onDelete(job.id)}
+                  title="מחק משרה"
+                  className="rounded-md p-1.5 text-red-500/70 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                >
+                  <TrashIcon className="h-4 w-4" />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

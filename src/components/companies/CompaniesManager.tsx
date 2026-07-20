@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { accentByIndex } from "@/lib/ui";
 import type { CompanyListItemDTO } from "@/domain/types";
 
@@ -11,6 +12,7 @@ export function CompaniesManager({ initial }: { initial: CompanyListItemDTO[] })
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [name, setName] = useState("");
   const [website, setWebsite] = useState("");
@@ -18,6 +20,17 @@ export function CompaniesManager({ initial }: { initial: CompanyListItemDTO[] })
   const [notes, setNotes] = useState("");
 
   const refetch = () => api.companies.list().then(setCompanies).catch(() => {});
+
+  async function remove(id: string) {
+    const prev = companies;
+    setCompanies((cs) => cs.filter((c) => c.id !== id));
+    try {
+      await api.companies.remove(id);
+    } catch (err) {
+      setCompanies(prev);
+      alert(err instanceof Error ? err.message : "המחיקה נכשלה");
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,26 +84,59 @@ export function CompaniesManager({ initial }: { initial: CompanyListItemDTO[] })
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {companies.map((c, i) => (
-            <Link
-              key={c.id}
-              href={`/companies/${c.id}`}
-              className={`flex items-center justify-between gap-3 card card-hover p-5 ${accentByIndex(i)}`}
-            >
-              <div className="min-w-0">
-                <h3 className="truncate font-semibold heading">{c.name}</h3>
-                <p className="truncate text-xs muted">
-                  {c.industry || "—"}
-                  {c.website && <> · {c.website.replace(/^https?:\/\//, "")}</>}
-                </p>
-              </div>
-              <div className="flex shrink-0 gap-2 text-xs">
-                <span className="chip bg-[#0055DA]/10 text-[#0055DA]">{c.jobCount} משרות</span>
-                <span className="chip bg-[#00C68D]/15 text-[#00C68D]">{c.recruiterCount} אנשי קשר</span>
-              </div>
-            </Link>
+            <div key={c.id} className="relative">
+              <Link
+                href={`/companies/${c.id}`}
+                className={`flex items-center justify-between gap-3 card card-hover p-5 ${accentByIndex(i)}`}
+              >
+                <div className="min-w-0">
+                  <h3 className="truncate font-semibold heading">{c.name}</h3>
+                  <p className="truncate text-xs muted">
+                    {c.industry || "—"}
+                    {c.website && <> · {c.website.replace(/^https?:\/\//, "")}</>}
+                  </p>
+                </div>
+                <div className="flex shrink-0 gap-2 pl-8 text-xs">
+                  <span className="chip bg-[#0055DA]/10 text-[#0055DA]">{c.jobCount} משרות</span>
+                  <span className="chip bg-[#00C68D]/15 text-[#00C68D]">{c.recruiterCount} אנשי קשר</span>
+                </div>
+              </Link>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setConfirmDeleteId(c.id);
+                }}
+                title="מחק חברה"
+                className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-md p-1.5 text-red-500/70 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="h-4 w-4"
+                >
+                  <path d="M4 7h16M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7h14z" />
+                </svg>
+              </button>
+            </div>
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="מחיקת חברה"
+        message="אנשי הקשר המשויכים לחברה יימחקו גם הם. לא ניתן לשחזר."
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) remove(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

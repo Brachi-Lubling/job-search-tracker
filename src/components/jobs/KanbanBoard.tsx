@@ -8,9 +8,11 @@ import { pipelineOrder, pipelineLabel, pipelineDot, pipelineBorder, jobStatusBad
 export function KanbanBoard({
   jobs,
   onMove,
+  onDelete,
 }: {
   jobs: JobListItemDTO[];
   onMove: (jobId: string, stage: PipelineStage) => void;
+  onDelete: (jobId: string) => void;
 }) {
   const [dragOver, setDragOver] = useState<PipelineStage | null>(null);
 
@@ -58,11 +60,30 @@ export function KanbanBoard({
                     </p>
                     <p className="truncate text-xs muted">{job.company.name}</p>
                   </Link>
-                  <span
-                    className={`mt-2 inline-block rounded-full px-2 py-0.5 text-[11px] ${jobStatusBadge[job.status]}`}
-                  >
-                    {jobStatusLabel[job.status]}
-                  </span>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span
+                      className={`inline-block rounded-full px-2 py-0.5 text-[11px] ${jobStatusBadge[job.status]}`}
+                    >
+                      {jobStatusLabel[job.status]}
+                    </span>
+                    <button
+                      onClick={() => onDelete(job.id)}
+                      title="מחק משרה"
+                      className="shrink-0 rounded p-1 text-red-500/70 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-3.5 w-3.5"
+                      >
+                        <path d="M4 7h16M8 7V5a2 2 0 012-2h4a2 2 0 012 2v2m3 0-1 13a2 2 0 01-2 2H8a2 2 0 01-2-2L5 7h14z" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
               {items.length === 0 && (
