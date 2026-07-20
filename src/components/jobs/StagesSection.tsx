@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { QuickPipelineModal } from "@/components/jobs/QuickPipelineModal";
 import {
   stageStatusLabel,
@@ -28,6 +29,7 @@ export function StagesSection({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showPipelineModal, setShowPipelineModal] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   function sortStages(list: StageDTO[]) {
     return [...list].sort((a, b) => a.date.localeCompare(b.date));
@@ -57,7 +59,6 @@ export function StagesSection({
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("למחוק את השלב?")) return;
     await api.jobs.removeStage(jobId, id);
     setStages((prev) => prev.filter((s) => s.id !== id));
   }
@@ -119,7 +120,7 @@ export function StagesSection({
                       <button onClick={() => setEditingId(stage.id)} className="text-[#0055DA] hover:underline">
                         עריכה
                       </button>
-                      <button onClick={() => handleDelete(stage.id)} className="text-red-600 hover:underline">
+                      <button onClick={() => setConfirmDeleteId(stage.id)} className="text-red-600 hover:underline">
                         מחיקה
                       </button>
                     </div>
@@ -148,6 +149,17 @@ export function StagesSection({
       {showPipelineModal && (
         <QuickPipelineModal jobId={jobId} current={pipeline} onClose={() => setShowPipelineModal(false)} />
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="מחיקת שלב"
+        message="לא ניתן לשחזר את השלב לאחר המחיקה."
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) handleDelete(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

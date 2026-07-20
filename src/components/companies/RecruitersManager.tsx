@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { RecruiterDTO } from "@/domain/types";
 
 export function RecruitersManager({
@@ -14,9 +15,9 @@ export function RecruitersManager({
   const [recruiters, setRecruiters] = useState(initial);
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   async function del(id: string) {
-    if (!confirm("למחוק את איש הקשר?")) return;
     await api.recruiters.remove(id);
     setRecruiters((prev) => prev.filter((r) => r.id !== id));
   }
@@ -65,7 +66,7 @@ export function RecruitersManager({
                 <button onClick={() => setEditingId(r.id)} className="text-[#0055DA] hover:underline">
                   עריכה
                 </button>
-                <button onClick={() => del(r.id)} className="text-red-600 hover:underline">
+                <button onClick={() => setConfirmDeleteId(r.id)} className="text-red-600 hover:underline">
                   מחיקה
                 </button>
               </div>
@@ -88,6 +89,17 @@ export function RecruitersManager({
           + הוסף איש קשר
         </button>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="מחיקת איש קשר"
+        message="לא ניתן לשחזר לאחר המחיקה."
+        onCancel={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) del(confirmDeleteId);
+          setConfirmDeleteId(null);
+        }}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { TagInput } from "@/components/TagInput";
 import { formatDate } from "@/lib/ui";
 import type { ResumeListItemDTO } from "@/domain/types";
@@ -24,6 +25,7 @@ export function ResumeCard({
   const [tags, setTags] = useState<string[]>(resume.tags);
   const [notes, setNotes] = useState(resume.notes ?? "");
   const [busy, setBusy] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function save() {
     setBusy(true);
@@ -42,7 +44,6 @@ export function ResumeCard({
   }
 
   async function remove() {
-    if (!confirm("למחוק גרסת קו״ח זו? משרות מקושרות יישארו אך ינותקו מהקובץ.")) return;
     setBusy(true);
     try {
       await api.resumes.remove(resume.id);
@@ -111,10 +112,21 @@ export function ResumeCard({
             עריכה
           </button>
         )}
-        <button onClick={remove} disabled={busy} className="mr-auto text-red-600 hover:underline disabled:opacity-50">
+        <button onClick={() => setConfirmOpen(true)} disabled={busy} className="mr-auto text-red-600 hover:underline disabled:opacity-50">
           מחק
         </button>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="מחיקת גרסת קורות חיים"
+        message="משרות מקושרות יישארו אך ינותקו מהקובץ. לא ניתן לשחזר."
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          remove();
+        }}
+      />
     </div>
   );
 }

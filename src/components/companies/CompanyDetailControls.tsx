@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { CompanyDetailDTO } from "@/domain/types";
 
 export function CompanyDetailControls({ company }: { company: CompanyDetailDTO }) {
@@ -10,6 +11,7 @@ export function CompanyDetailControls({ company }: { company: CompanyDetailDTO }
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const [name, setName] = useState(company.name);
   const [website, setWebsite] = useState(company.website ?? "");
@@ -37,7 +39,6 @@ export function CompanyDetailControls({ company }: { company: CompanyDetailDTO }
   }
 
   async function remove() {
-    if (!confirm("למחוק את החברה? אנשי הקשר יימחקו גם הם.")) return;
     try {
       await api.companies.remove(company.id);
       router.push("/companies");
@@ -73,11 +74,22 @@ export function CompanyDetailControls({ company }: { company: CompanyDetailDTO }
         ערוך חברה
       </button>
       <button
-        onClick={remove}
+        onClick={() => setConfirmOpen(true)}
         className="rounded border-2 border-red-500 px-4 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 dark:hover:bg-red-950/40"
       >
         מחק חברה
       </button>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="מחיקת חברה"
+        message="אנשי הקשר המשויכים לחברה יימחקו גם הם. לא ניתן לשחזר."
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          remove();
+        }}
+      />
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/client/api";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { JobEditForm } from "@/components/jobs/JobEditForm";
 import { pipelineOrder, pipelineLabel } from "@/lib/ui";
 import type { JobDetailDTO, PipelineStage } from "@/domain/types";
@@ -12,6 +13,7 @@ export function JobDetailControls({ job }: { job: JobDetailDTO }) {
   const [saving, setSaving] = useState(false);
   const [value, setValue] = useState<PipelineStage>(job.pipeline);
   const [editing, setEditing] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   async function changePipeline(next: PipelineStage) {
     setValue(next);
@@ -25,7 +27,6 @@ export function JobDetailControls({ job }: { job: JobDetailDTO }) {
   }
 
   async function remove() {
-    if (!confirm("למחוק את המשרה? פעולה זו תמחק גם את השלבים והסיכום.")) return;
     await api.jobs.remove(job.id);
     router.push("/jobs");
     router.refresh();
@@ -52,13 +53,24 @@ export function JobDetailControls({ job }: { job: JobDetailDTO }) {
         ערוך פרטים
       </button>
       <button
-        onClick={remove}
+        onClick={() => setConfirmOpen(true)}
         className="rounded-md border border-red-200 px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:border-red-900/50 dark:hover:bg-red-950/40"
       >
         מחק משרה
       </button>
 
       {editing && <JobEditForm job={job} onClose={() => setEditing(false)} />}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="מחיקת משרה"
+        message="פעולה זו תמחק גם את השלבים והסיכום. לא ניתן לשחזר."
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          remove();
+        }}
+      />
     </div>
   );
 }
