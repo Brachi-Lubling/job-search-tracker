@@ -1,4 +1,4 @@
-import { api } from "@/client/api";
+import { resumeService } from "@/server/services/resume.service";
 import { PageHeader } from "@/components/PageHeader";
 import { PageLines } from "@/components/PageLines";
 import { ResumesManager } from "@/components/resumes/ResumesManager";
@@ -6,7 +6,7 @@ import { ResumesManager } from "@/components/resumes/ResumesManager";
 export const dynamic = "force-dynamic";
 
 export default async function ResumesPage() {
-  const resumes = await api.resumes.list();
+  const resumes = await resumeService.list();
 
   return (
     <div

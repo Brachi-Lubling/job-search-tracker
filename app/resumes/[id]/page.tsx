@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, ApiError } from "@/client/api";
+import { resumeService } from "@/server/services/resume.service";
+import { NotFoundError } from "@/server/http";
 import { pipelineLabel, pipelineBadge, jobStatusBadge, jobStatusLabel, formatDate } from "@/lib/ui";
 import type { ResumeDetailDTO } from "@/domain/types";
 import { PageLines } from "@/components/PageLines";
@@ -16,9 +17,9 @@ export default async function ResumeDetailPage({
 
   let resume: ResumeDetailDTO;
   try {
-    resume = await api.resumes.get(id);
+    resume = await resumeService.getById(id);
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) notFound();
+    if (e instanceof NotFoundError) notFound();
     throw e;
   }
 

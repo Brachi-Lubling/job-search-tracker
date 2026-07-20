@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, ApiError } from "@/client/api";
+import { companyService } from "@/server/services/company.service";
+import { NotFoundError } from "@/server/http";
 import { RecruitersManager } from "@/components/companies/RecruitersManager";
 import { CompanyDetailControls } from "@/components/companies/CompanyDetailControls";
 import { pipelineLabel, pipelineBadge, jobStatusBadge, jobStatusLabel } from "@/lib/ui";
@@ -18,9 +19,9 @@ export default async function CompanyDetailPage({
 
   let company: CompanyDetailDTO;
   try {
-    company = await api.companies.get(id);
+    company = await companyService.getById(id);
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) notFound();
+    if (e instanceof NotFoundError) notFound();
     throw e;
   }
 

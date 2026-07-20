@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { api } from "@/client/api";
+import { statsService } from "@/server/services/stats.service";
+import { dashboardService } from "@/server/services/dashboard.service";
 import { PageHeader } from "@/components/PageHeader";
 import { PageLines } from "@/components/PageLines";
 import { StatTile } from "@/components/StatTile";
@@ -10,7 +11,7 @@ import { JobCard } from "@/components/JobCard";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [stats, active] = await Promise.all([api.stats.get(), api.dashboard.get()]);
+  const [stats, active] = await Promise.all([statsService.getSummary(), dashboardService.getActive()]);
 
   return (
     <div

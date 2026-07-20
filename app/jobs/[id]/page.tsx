@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { api, ApiError } from "@/client/api";
+import { jobService } from "@/server/services/job.service";
+import { NotFoundError } from "@/server/http";
 import { StagesSection } from "@/components/jobs/StagesSection";
 import { ReflectionSection } from "@/components/ReflectionSection";
 import { JobDetailControls } from "@/components/jobs/JobDetailControls";
@@ -19,9 +20,9 @@ export default async function JobDetailsPage({
 
   let job: JobDetailDTO;
   try {
-    job = await api.jobs.get(id);
+    job = await jobService.getById(id);
   } catch (e) {
-    if (e instanceof ApiError && e.status === 404) notFound();
+    if (e instanceof NotFoundError) notFound();
     throw e;
   }
 

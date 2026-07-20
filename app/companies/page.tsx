@@ -1,4 +1,4 @@
-import { api } from "@/client/api";
+import { companyService } from "@/server/services/company.service";
 import { PageHeader } from "@/components/PageHeader";
 import { PageLines } from "@/components/PageLines";
 import { CompaniesManager } from "@/components/companies/CompaniesManager";
@@ -6,7 +6,7 @@ import { CompaniesManager } from "@/components/companies/CompaniesManager";
 export const dynamic = "force-dynamic";
 
 export default async function CompaniesPage() {
-  const companies = await api.companies.list();
+  const companies = await companyService.list();
 
   return (
     <div
