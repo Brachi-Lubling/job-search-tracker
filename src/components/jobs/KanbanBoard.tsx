@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { JobListItemDTO, PipelineStage } from "@/domain/types";
 import { pipelineOrder, pipelineLabel, pipelineDot, pipelineBorder, jobStatusBadge, jobStatusLabel } from "@/lib/ui";
@@ -16,10 +16,16 @@ export function KanbanBoard({
 }) {
   const [dragOver, setDragOver] = useState<PipelineStage | null>(null);
 
+  const byStage = useMemo(() => {
+    const grouped = new Map<PipelineStage, JobListItemDTO[]>(pipelineOrder.map((s) => [s, []]));
+    for (const job of jobs) grouped.get(job.pipeline)?.push(job);
+    return grouped;
+  }, [jobs]);
+
   return (
     <div className="flex gap-3 overflow-x-auto pb-3">
       {pipelineOrder.map((stage) => {
-        const items = jobs.filter((j) => j.pipeline === stage);
+        const items = byStage.get(stage) ?? [];
         return (
           <div
             key={stage}
