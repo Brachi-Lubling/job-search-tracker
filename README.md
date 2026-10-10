@@ -38,13 +38,23 @@ cp .env.example .env
 # 2. Start Postgres (host port 5544 to avoid clashing with a native Postgres on 5432)
 docker compose up -d
 
-# 3. Run migrations + seed demo data
+# 3. Apply migrations + seed demo data
 npm run db:migrate
 npm run db:seed
 
-# 4. Run the dev server
-npm run dev        # http://localhost:3000
+# 4. Build Production and apply any pending deployment migrations
+npm run update:production
+
+# 5. Run the production server
+npm start          # http://localhost:3000
 ```
+
+On Windows, `UPDATE.bat` builds the production version and applies pending
+migrations; run it after code or schema changes, with the app stopped. Then use
+`START.bat` for normal production use. It reuses the existing build, starts
+Postgres, and waits for the database before starting Next.js. Use
+`START-DEV.bat` when actively developing; it runs `prisma migrate dev` and
+`next dev`.
 
 The data loaded by `db:seed` is demo data only (fictional companies, recruiters,
 and job applications) — safe to use and doesn't expose any real information.
@@ -64,9 +74,13 @@ trusts, it doesn't disable TLS verification. Most contributors won't need this.
 ## Scripts
 | Command | Action |
 |---------|--------|
+| `npm run up` | One-shot: start Postgres (Docker), run migrations, start the dev server (no seed) |
 | `npm run dev` | Start the dev server |
+| `npm run start` | Start the existing production build |
+| `npm run update:production` | Generate Prisma Client, build, then deploy pending migrations |
 | `npm run typecheck` | Type-check (tsc) |
-| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:migrate` | Create/apply development migrations (`prisma migrate dev`) |
+| `npm run db:deploy` | Apply existing migrations without creating new ones (`prisma migrate deploy`) |
 | `npm run db:seed` | Seed demo data |
 | `npm run db:studio` | Prisma Studio (browse data) |
 
