@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: cvuser
-      POSTGRES_PASSWORD: CHANGE_ME
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME}
       POSTGRES_DB: cvplatform
     ports:
       - "127.0.0.1:5544:5432"

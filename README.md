@@ -34,6 +34,7 @@ Route handlers never access Prisma directly.
 # 1. Install dependencies
 npm install
 cp .env.example .env
+# Set the same strong local password in POSTGRES_PASSWORD and DATABASE_URL
 
 # 2. Start Postgres (host port 5544 to avoid clashing with a native Postgres on 5432)
 docker compose up -d
